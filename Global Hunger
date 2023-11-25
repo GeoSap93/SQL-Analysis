@@ -1,0 +1,124 @@
+-- Project Global Hunger
+
+-- Core Requirements
+
+-- 1. Create realtional DB
+
+create database global_hunger;
+
+use global_hunger;
+
+select * from food_per_country;
+select * from item_per_country;
+select * from element_per_country;
+select * from production_20thcentury;
+select * from production_21stcentury;
+
+-- 2. Set Primary & Foreign Key
+
+create table Food_per_country (
+area_code int PRIMARY KEY NOT NULL,
+area varchar(50) NOT NULL
+);
+create table Item_per_country (
+Area_code varchar(3) NOT NULL,
+item_code int PRIMARY KEY NOT NULL,
+item varchar(50) NOT NULL
+);
+create table Element_per_country (
+Y2013 INT NOT NULL,
+Y1999 INT NOT NULL,
+element_code int PRIMARY KEY NOT NULL,
+element varchar(4) NOT NULL,
+area varchar(45)
+);
+create table production_20thcentury (
+Y1999 INT PRIMARY KEY not NULL,
+item_code int NOT NULL,
+item varchar(50) not null,
+area varchar(45)
+);
+create table production_21stcentury (
+Y2013 INT PRIMARY KEY not NULL,
+item_code int NOT NULL,
+item varchar(50) not null,
+element_code int NOT NULL,
+area varchar(45)
+);
+
+
+-- 3. This inner join combines table food_per_country, item_per_country and production_20thcentury. 
+
+select f.area_code,f.area
+from food_per_country as f
+inner join item_per_country as it on f.area_code = it.area_code
+inner join production_20thcentury as pr20 on f.area = pr20.area
+where pr20.item_code = it.item_code or pr20.area = f.area;
+
+
+
+-- 4. Created a stored function that shows the item and the country that have produced a low, good or excellent amount of food in year 1999
+
+select item, area, Y1999,
+	CASE
+		when Y1999>=0 and Y1999<60 THEN "The amount of food they produced is low."
+        when Y1999>=60 and Y1999<1100 THEN "The amount of food they produced is good."
+        else 
+        "The amount of food they produced is enough to feed the whole world!"
+	END AS Y1999_production
+from production_20thcentury;
+
+
+
+-- 5. Subquery with tables item_per_country and production_20thcentury
+
+select item, item_code, area_code from item_per_country as it
+where it.item in 
+(select item from production_20thcentury as pr20 
+where pr20.item = 'Honey')
+
+
+-- Advanced Options
+
+-- 1. Stored Procedure
+
+DELIMITER //
+
+CREATE PROCEDURE hello (area varchar(45), item varchar(50))
+BEGIN
+    DECLARE greeting VARCHAR(250);
+    SET greeting = CONCAT('Hello, ', area, ' ', item, '!');
+    SELECT greeting;
+END //
+
+DELIMITER ;
+
+CALL hello ('Greece', 'Olives');
+
+
+-- 4. View with 3 tables (Food_per_country, Item_per_country, Production_20thcentury)
+
+CREATE VIEW vw_food_production_20th_century AS
+SELECT f.area_code, f.area
+FROM food_per_country f
+JOIN item_per_country it ON f.area_code = it.area_code
+JOIN production_20thcentury pr20 ON it.item_code = pr20.item_code
+GROUP BY f.area_code, f.area;
+
+select * from vw_food_production_20th_century;
+
+
+-- 5. Query with groub by
+
+select 
+area,
+item,
+sum(Y1999) as Total_Production_20th_Amount,
+avg(Y1999) as Average_Production_20th_Amount,
+max(Y1999) as Minimum_Production_20th_Amount,
+min(Y1999) as Maximum_Production_20th_Amount
+from 
+production_20thcentury
+where Y1999>0
+group by area, item;
+
