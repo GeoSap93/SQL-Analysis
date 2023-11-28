@@ -1,4 +1,4 @@
-SQL Analysis with the Database "Global Hunger"
+# SQL Analysis with the Database "Global Hunger"
 
 This is an analysis using the database "Global Hunger" from Kaggle.
 I used the SQL to insert the csv file as my database and create tables by using primary and foreign key to form connections.
